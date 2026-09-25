@@ -102,37 +102,6 @@
 		     Content Include 複製到輸出目錄。glob 按擴展名排除：Raw 樹中這兩類各僅此一個文件。 -->
 		<MauiAsset Remove="Resources\Raw\Content\*.url" />
 		<MauiAsset Remove="Resources\Raw\Content\*.docx" />
-		<!-- 其餘 22 個非 ASCII 文件名資源同樣必須排除（aapt2 對其逐一報 APT2098），三重驗證依據：
-		     ① 原版打包清單生成器 GameTools.GetContentList 即以「(int)ch > 127 → continue」跳過全部非 ASCII
-		        文件名——這些文件（psd 源文件、rar 模型、「副本」殘留、GBK→UTF8 亂碼名、中文名素材）在原版
-		        打包體系中從未進入資源清單；
-		     ② 全倉 .cs 零字符串引用；運行時加載路徑均不涉及：Treasure 按 int ID 拼 '{n}.jpg'、Troop 加載
-		        固定名 Move/Attack/BeAttacked/Cast/BeCasted.png、Architecture 目錄掃描僅採納 '{int}-{5|13}.png'、
-		        各界面 UI 資源均為固定 ASCII 名；
-		     ③ 各文件所在目錄均有正式 ASCII 資源承擔實際加載（shiqi1.png / Menu.png / NumberSetS-Fill.png 等）。
-		     桌面端（Windows/Linux）仍由下方 Content Include 全量複製，素材文件保留於輸出目錄。 -->
-		<MauiAsset Remove="Resources\Raw\Content\Textures\GameComponents\ArchitectureSurvey\Data\Backgrounds\Bar\未标题-2.psd" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\GameComponents\FactionTechniques\Data\情怀Background情怀.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\GameComponents\PersonPortrait\Images\Default\芛砉載陔.txt" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\GameComponents\TroopTitle\Data\Icon\shiqi1 - 副本.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\GameComponents\TroopTitle\Data\Icon\zhanyi1 - 副本.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Architecture\对建筑名称的说明.txt" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Architecture\蓝色郡城.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\SaveSelect\芞巠皊喜渡佽隴.txt" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\ScenarioLoading\芞巠皊喜渡佽隴.txt" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\ScenarioLoading\载入剧本.psd" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\ScenarioSelect\芞巠皊喜渡佽隴.txt" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Start\Menu - 恚庨.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Start\NumberSetS-Fill - 副本.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Start\芞巠皊喜渡佽隴.txt" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Treasure\眃.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Treasure\南华真经.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Treasure\名将心得.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Treasure\璣动み眔.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Treasure\画雕弓.jpg" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Treasure\皊.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Troop\161\Move 捌セ.png" />
-		<MauiAsset Remove="Resources\Raw\Content\Textures\Resources\Troop\406\52燕云铁骑兵模.rar" />
 
 		<!--<ProjectReference Include="..\..\SeasonEngine\SeasonXNA\SeasonXNA.csproj" />-->
 		<PackageReference Include="SeasonXNA" Version="0.3.0" />
