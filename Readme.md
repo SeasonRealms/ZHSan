@@ -1,5 +1,5 @@
 
-素材统一采用桌面版，需要复制Content文件夹到Resources\\Raw下，里面的TexturesAlpha已经不需要。
+素材统一采用桌面版，在Resources\Raw\Content下，原有的移动压缩版TexturesAlpha已去掉。
 
 字体采用MSDF预编译与缺失情况时的动态生成，这提供了性能和支持的最大化，缺点是换了字体需要重新预编译。
 
@@ -13,3 +13,9 @@ Windows需要显卡支持DirectX12, Linux/Android需要Vulkan 1.1，Android要�
 
 由Deepseek V4.1 flash基于SeasonXNA移植（提供了主要的MonoGame仿真层，原有XNA命名空间可以保留），当前测试通过Windows/Android，Linux/MacCatalyst/iOS未测试。
 
+Android publish keystore
+
+Location: Zhsan.keystore
+Password: Zhsan123
+Alias: Zhsan
+Key Password: Zhsan123
