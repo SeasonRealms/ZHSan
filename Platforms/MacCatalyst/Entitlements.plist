@@ -9,14 +9,6 @@
         <!-- When App Sandbox is enabled, this value is required to open outgoing network connections. -->
         <key>com.apple.security.network.client</key>
         <true/>
-        <!-- App Sandbox also requires this value to capture audio input (microphone) for on-device speech-to-text recording. -->
-        <key>com.apple.security.device.audio-input</key>
-        <true/>
-        <!-- App Sandbox also requires this value to write into the user's real ~/Downloads folder
-             (the container's Data/Downloads symlink resolves there; without it writes fail with
-             "Operation not permitted"). -->
-        <key>com.apple.security.files.downloads.read-write</key>
-        <true/>
         <!-- Required for UIDocumentPickerViewController. MacCatalyst hands the picker over to the AppKit
              open panel service, and under App Sandbox that service refuses to display the panel without
              this entitlement: AppKit only logs "Unable to display open panel" while UIKit keeps an
