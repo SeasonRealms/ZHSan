@@ -380,6 +380,52 @@ namespace GameManager
             return tex;
         }
 
+        // ── 繪製咽喉統一衛生化 ────────────────────────────────────────────
+        // SeasonXNA 對空/越界來源矩形 fail-fast（原版 MonoGame 靜默退化）；
+        // 第三方程式數值退化時僅需「不顯示」，在此統一吸收，免去調用行逐處補丁。
+        // 退化只記會話級去重警告，保留 TextureRecs 數據錯誤的可診斷信號。
+
+        static readonly HashSet<string> DrawRectWarnings = new HashSet<string>();
+        static readonly object DrawRectWarnSync = new object();
+
+        /// <summary>
+        /// 來源矩形衛生化：空來源 → 跳過繪製；越界 → 裁剪為與紋理邊界的交集（交集為空 → 跳過）。
+        /// 返回 false 表示本次不應提交繪製；source 會改寫為裁剪後的矩形。
+        /// </summary>
+        static bool TrySanitizeSource(string name, Texture2D tex, ref Rectangle? source)
+        {
+            if (source is not { } rect) return true;
+            if (rect.Width <= 0 || rect.Height <= 0)
+            {
+                WarnDrawRect(name, rect, "空來源矩形，跳過繪製");
+                return false;
+            }
+            var clipped = Rectangle.Intersect(rect, new Rectangle(0, 0, tex.Width, tex.Height));
+            if (clipped.Width <= 0 || clipped.Height <= 0)
+            {
+                WarnDrawRect(name, rect, "來源矩形完全越出紋理，跳過繪製");
+                return false;
+            }
+            if (clipped != rect)
+            {
+                WarnDrawRect(name, rect, "來源矩形越界，已裁剪為 " + clipped);
+                source = clipped;
+            }
+            return true;
+        }
+
+        static void WarnDrawRect(string name, Rectangle rect, string reason)
+        {
+            lock (DrawRectWarnSync)
+            {
+                if (DrawRectWarnings.Count >= 512 || !DrawRectWarnings.Add(name + "|" + rect))
+                {
+                    return;
+                }
+            }
+            WebTools.TakeWarnMsg("[CacheManager] " + name + " " + reason, "Draw:" + rect, null);
+        }
+
         public static void Draw(string name, Vector2 pos, Color color)
         {
             Texture2D tex = LoadTexture(name);
@@ -400,7 +446,12 @@ namespace GameManager
 
             if (tex != null && !tex.IsDisposed)
             {
-                Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, effect, depth);
+                // 返回值仍按調用方請求的來源矩形計算（點擊區等佈局語義不變），僅提交繪製用裁剪後矩形。
+                var drawSource = source;
+                if (TrySanitizeSource(name, tex, ref drawSource))
+                {
+                    Session.Current.SpriteBatch.Draw(tex, pos, drawSource, color, 0f, Vector2.Zero, scale, effect, depth);
+                }
             }
 
             if (source == null)
@@ -411,7 +462,7 @@ namespace GameManager
         public static void Draw(string name, Vector2 pos, Rectangle? source, Color color, SpriteEffects effect, Vector2 scale, float depth = 0f)
         {
             Texture2D tex = LoadTexture(name);
-            if (tex != null && !tex.IsDisposed)
+            if (tex != null && !tex.IsDisposed && TrySanitizeSource(name, tex, ref source))
             {
                 Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, effect, depth);
             }
@@ -425,7 +476,7 @@ namespace GameManager
         public static void Draw(string name, Vector2 pos, Rectangle? source, Color color, float rotation, SpriteEffects effect, Vector2 scale)
         {
             Texture2D tex = LoadTexture(name);
-            if (tex != null && !tex.IsDisposed)
+            if (tex != null && !tex.IsDisposed && TrySanitizeSource(name, tex, ref source))
             {
                 Session.Current.SpriteBatch.Draw(tex, pos, source, color, rotation, Vector2.Zero, scale, effect, 0f);
             }
@@ -436,7 +487,7 @@ namespace GameManager
             if (platformTexture != null && !String.IsNullOrEmpty(platformTexture.Name))
             {
                 Texture2D tex = LoadTexture(platformTexture.Name);
-                if (tex != null && !tex.IsDisposed)
+                if (tex != null && !tex.IsDisposed && TrySanitizeSource(platformTexture.Name, tex, ref source))
                 {
                     Session.Current.SpriteBatch.Draw(tex, pos, source, color, rotation, origin, scale, effect, depth);
                 }
@@ -458,7 +509,8 @@ namespace GameManager
             if (platformTexture != null && !String.IsNullOrEmpty(platformTexture.Name))
             {
                 Texture2D tex = LoadTexture(platformTexture.Name);
-                if (tex != null && !tex.IsDisposed)
+                // 來源衛生化先於負尺寸分支：空來源在此跳過（負尺寸分支的 scale = rec/src 除零亦隨之消解）。
+                if (tex != null && !tex.IsDisposed && TrySanitizeSource(platformTexture.Name, tex, ref source))
                 {
                     if (Scale != Vector2.One)
                     {
@@ -512,7 +564,11 @@ namespace GameManager
             {
                 if (Session.TextureRecs.ContainsKey(name + "#" + sec))
                 {
-                    Session.Current.SpriteBatch.Draw(tex, pos, Session.TextureRecs[name + "#" + sec].Recs[0], color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                    Rectangle? source = Session.TextureRecs[name + "#" + sec].Recs[0];
+                    if (TrySanitizeSource(name, tex, ref source))
+                    {
+                        Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+                    }
                 }
             }
         }
@@ -581,7 +637,7 @@ namespace GameManager
         public static void DrawAvatar(string name, Vector2 pos, Color color, Vector2 scale, Rectangle? source = null, bool isUser = false, bool isTemp = true)
         {
             Texture2D tex = LoadAvatar(name, isUser, isTemp, TextureShape.None, null);
-            if (tex != null && !tex.IsDisposed)
+            if (tex != null && !tex.IsDisposed && TrySanitizeSource(name, tex, ref source))
             {
                 Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
@@ -697,7 +753,7 @@ namespace GameManager
         public static void DrawShape(string name, TextureShape shape, float[] shapeParms, Vector2 pos, Color color, Vector2 scale, Rectangle? source = null, bool isTemp = true)
         {
             Texture2D tex = LoadShapeTexture(name, isTemp, shape, shapeParms);
-            if (tex != null && !tex.IsDisposed)
+            if (tex != null && !tex.IsDisposed && TrySanitizeSource(name, tex, ref source))
             {
                 Session.Current.SpriteBatch.Draw(tex, pos, source, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
             }
