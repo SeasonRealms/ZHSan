@@ -746,9 +746,10 @@ namespace Platforms
             if (MigrationCheck.Enabled)
                 throw new InvalidOperationException("External file pickers are disabled in the dedicated check build.");
 
-            // Android 的 PickFiles 返回 content:// URI（Name 非文件路徑），圖像數據必須從
-            // Stream 讀取，擴展名來自 MIME 推導的 Ext（如 ".jpeg"），不能照搬桌面端的
-            // File.ReadAllBytes(fileName) 模式。
+            // 引擎的 Android PickFiles 已把 SAF 內容導入本地緩存並返回本地路徑（Name 為緩存
+            // 文件路徑，與 Apple UIDocumentPickerMode.Import、桌面端的 Name 語義一致）；此處
+            // 仍按 Stream 讀取數據、用 Ext 校驗擴展名——Ext 現在來自真實文件名
+            // （_display_name），如 ".jpeg"。
             string extension = null;
             byte[] bytes = null;
 
