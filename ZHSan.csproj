@@ -112,12 +112,19 @@
 		<Content Include="Resources\Raw\**" CopyToOutputDirectory="PreserveNewest" Link="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 	
-	<ItemGroup Condition="'$(IsWindows)' == 'true'">
-        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250909003" />
-	</ItemGroup>
+	<!-- Microsoft.WindowsAppSDK 由 Microsoft.Maui.Core 传递引入并随 MAUI 版本浮动（同 SeasonStudio/
+	     Engine/Creator），不在此直接钉版本：钉死低于 MAUI 传递下限的版本会触发 NU1605 包降级
+	     （warn-as-error），且旧主包的 Microsoft.WinUI.props 会抢占 MSIX BuildTools 注册的
+	     CustomBeforeMicrosoftCommonTargets，致其链校验报错。 -->
 
-	<Target Name="IncludeLinuxFilesForLinuxTarget" BeforeTargets="BeforeCompile" Condition="'$(IsLinux)' == 'true'">
+	<!-- 重加平台源必须挂在 _MauiRemovePlatformCompileItems 之后：MAUI 10.0.110 的清理目标
+	     晚于工程 BeforeTargets=BeforeCompile 钩子执行，凡在 BeforeCompile 时重加的
+	     Platforms\** 文件都会被它再次清掉（本工程 UseMaui/SingleProject 全 TFM 生效：
+	     net10.0 会因清空而报 CS0234；android/ios 会缺 Shared 平台类型）。
+	     Remove + Include 保证恰好一份，也不与默认通配重复（NETSDK1022）。 -->
+	<Target Name="IncludeLinuxFilesForLinuxTarget" AfterTargets="_MauiRemovePlatformCompileItems" Condition="'$(IsLinux)' == 'true'">
 		<ItemGroup>
+			<Compile Remove="Platforms\Linux\**\*.cs" />
 			<Compile Include="Platforms\Linux\**\*.cs" />
 		</ItemGroup>
 	</Target>
@@ -152,14 +159,18 @@
 		</ItemGroup>
 	</Target>
 
-	<Target Name="IncludeSharedAppleFiles" BeforeTargets="BeforeCompile" Condition="'$(IsApple)' == 'true'">
+	<Target Name="IncludeSharedAppleFiles" AfterTargets="_MauiRemovePlatformCompileItems" Condition="'$(IsApple)' == 'true'">
 		<ItemGroup>
+			<!-- 同 IncludeLinuxFilesForLinuxTarget：须挂在 MAUI 清理目标之后重加，才不会被再次清掉；Remove 保证幂等。 -->
+			<Compile Remove="Platforms\Shared\Apple\**\*.cs" />
 			<Compile Include="Platforms\Shared\Apple\**\*.cs" />
 		</ItemGroup>
 	</Target>
 
-	<Target Name="IncludeSharedUnixFiles" BeforeTargets="BeforeCompile" Condition="'$(IsUnixLike)' == 'true'">
+	<Target Name="IncludeSharedUnixFiles" AfterTargets="_MauiRemovePlatformCompileItems" Condition="'$(IsUnixLike)' == 'true'">
 		<ItemGroup>
+			<!-- 同 IncludeLinuxFilesForLinuxTarget：须挂在 MAUI 清理目标之后重加，才不会被再次清掉；Remove 保证幂等。 -->
+			<Compile Remove="Platforms\Shared\LinuxAndroid\**\*.cs" />
 			<Compile Include="Platforms\Shared\LinuxAndroid\**\*.cs" />
 		</ItemGroup>
 	</Target>
