@@ -154,14 +154,9 @@ namespace Platforms
 
         public override void SetTimerDisabled(bool timerDisabled)
         {
-            try
-            {
-                UIApplication.SharedApplication.IdleTimerDisabled = timerDisabled;
-            }
-            catch (Exception)
-            {
-                // 屏幕常亮控制失敗不影響遊戲主流程。
-            }
+            // 與 Android、SanguoSeason 同一入口：IdleTimerDisabled 的設置與回前台重放都
+            // 交給引擎 KeepAwake（Mac Catalyst 由平台實現保持 no-op）。
+            global::Season.Basic.KeepAwake.Pin(timerDisabled);
         }
 
         public override void SetBarStyle()

@@ -82,7 +82,10 @@ namespace Platforms
 
         public override void SetTimerDisabled(bool timerDisabled)
         {
-            // 引擎宿主未提供屏幕常亮控制，保持系統默認。
+            // 遊戲自啟動起即常亮：與 SanguoSeason 同一入口，固定（Pin）引擎的 KeepAwake。
+            // Android/iOS 共用同一狀態機，Activity 重建或回前台時由 BaseActivity 的
+            // Reapply 自動補回標誌；桌面平台由 IDeviceCore 的默認空實現忽略。
+            global::Season.Basic.KeepAwake.Pin(timerDisabled);
         }
 
         public override void PreparePhone()

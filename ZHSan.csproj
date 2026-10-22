@@ -103,8 +103,8 @@
 		<MauiAsset Remove="Resources\Raw\Content\*.url" />
 		<MauiAsset Remove="Resources\Raw\Content\*.docx" />
 
-		<!--<ProjectReference Include="..\..\SeasonEngine\SeasonXNA\SeasonXNA.csproj" />-->
-		<PackageReference Include="SeasonXNA" Version="0.3.0" />
+		<ProjectReference Include="..\..\SeasonEngine\SeasonXNA\SeasonXNA.csproj" />
+		<!--<PackageReference Include="SeasonXNA" Version="0.3.0" />-->
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	</ItemGroup>
 
